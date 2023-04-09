@@ -15,6 +15,10 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <h1>{hello.data?.greeting}</h1>
+      <div className={"flex flex-col gap-3"}>
+        <Link href="/login">Login</Link>
+        <Link href="/signup">Signup</Link>
+      </div>
     </>
   );
 };

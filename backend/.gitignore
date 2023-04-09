@@ -4,3 +4,5 @@ bin
 lib
 pyvenv.cfg
 include
+credentials.csv
+test.py
