@@ -58,8 +58,14 @@ def load_user(user_id):
 
 
 @login_manager.request_loader
-def load_user_from_request(user_id):
-    return User.query.get(int(user_id))
+def load_user_from_request(req):
+    user = request.url.split("/")[-1]
+    return User.query.filter_by(username=user).first()
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    return "Unauthorized", 401
 
 
 class Test(db.Model):
@@ -73,8 +79,31 @@ class TestAPI(Resource):
 
 
 class Data(Resource):
+    @login_required
     def get(self, username):
-        return "please work"
+        messages = [user_data.text for user_data in UserData.query.filter_by(user_id=current_user.id).all()]
+        ids = [user_data.id for user_data in UserData.query.filter_by(user_id=current_user.id).all()]
+        return {"messages": messages, "ids": ids}
+
+    @login_required
+    def post(self, username):
+        if request.get_json():
+            user_data = UserData(current_user, request.get_json()['message'])
+            db.session.add(user_data)
+            db.session.commit()
+            return {"message": "success"}, 200
+        else:
+            return {"message": "fail"}, 400
+
+    @login_required
+    def delete(self, username):
+        if request.get_json():
+            user_data = UserData.query.filter_by(id=request.get_json()['id']).first()
+            db.session.delete(user_data)
+            db.session.commit()
+            return {"message": "success"}, 200
+        else:
+            return {"message": "fail"}, 400
 
 
 api.add_resource(Data, '/data/<username>')
@@ -114,8 +143,12 @@ def signup():
 @app.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
-    logout_user()
-    return redirect('http://localhost:3000/user/login')
+    try:
+        logout_user()
+        return redirect('http://localhost:3000/login')
+    except Exception as e:
+        print(e)
+        return redirect('http://localhost:3000/error')
 
 
 api.add_resource(TestAPI, '/')

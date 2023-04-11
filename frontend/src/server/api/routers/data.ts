@@ -1,15 +1,64 @@
 import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import { redirect } from "next/navigation";
 
-async function getData(username: string): Promise<string> {
+async function getData(
+  username: string
+): Promise<{ messages: string[]; ids: number[] }> {
   const res = await fetch(`http://localhost:5000/data/${username}`);
-  return await res.text();
+
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+    });
+  }
+
+  return (await res.json()) as { messages: string[]; ids: number[] };
+}
+
+async function postData(username: string, message: string): Promise<void> {
+  const res = await fetch(`http://localhost:5000/data/${username}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+    });
+  }
+}
+
+async function deleteData(username: string, id: number): Promise<void> {
+  const res = await fetch(`http://localhost:5000/data/${username}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+    });
+  }
 }
 
 export const dataRouter = createTRPCRouter({
-  test: publicProcedure.input(z.string()).query(async ({ input }) => {
+  get: publicProcedure.input(z.string()).mutation(async ({ input }) => {
     const data = await getData(input);
-    return { message: data };
+    return { messages: data.messages, ids: data.ids };
+  }),
+
+  post: publicProcedure.input(z.string()).mutation(async ({ input }) => {
+    const res = await postData("tyler", input);
+    // return "";
+  }),
+
+  delete: publicProcedure.input(z.number()).mutation(async ({ input }) => {
+    const res = await deleteData("tyler", input);
+    return "success";
   }),
 });
