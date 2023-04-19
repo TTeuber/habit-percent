@@ -3,7 +3,6 @@ from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_wtf import FlaskForm
 import csv
 
 app = Flask(__name__)
@@ -100,6 +99,16 @@ class Data(Resource):
         if request.get_json():
             user_data = UserData.query.filter_by(id=request.get_json()['id']).first()
             db.session.delete(user_data)
+            db.session.commit()
+            return {"message": "success"}, 200
+        else:
+            return {"message": "fail"}, 400
+
+    @login_required
+    def patch(self, username):
+        if request.get_json():
+            user_data = UserData.query.filter_by(id=request.get_json()['id']).first()
+            user_data.text = request.get_json()['message']
             db.session.commit()
             return {"message": "success"}, 200
         else:

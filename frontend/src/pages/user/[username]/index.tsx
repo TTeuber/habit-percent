@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { redirect } from "next/navigation";
+import Graph from "~/components/Graph";
 
 export default function UserPage() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function UserPage() {
 
   const postData = api.data.post.useMutation();
   const deleteData = api.data.delete.useMutation();
+  const patchData = api.data.patch.useMutation();
 
   useEffect(() => {
     if (getData.error) {
@@ -39,22 +41,38 @@ export default function UserPage() {
 
   return (
     <div>
+      <Graph />
       <h1>{username}</h1>
       {getData.data?.messages.map((message, i) => {
         return (
           <div key={getData.data?.ids[i]} className={"flex gap-2"}>
+            <p>{getData.data?.ids[i]}</p>
             <p>{message}</p>
             <button
               onClick={async () => {
                 deleteData.mutateAsync(ids[i] ?? 0).then(() => {
-                  getData.mutateAsync(username).then(() => {
-                    setIds(getData.data?.ids ?? []);
-                    setMessages(getData.data?.messages ?? []);
-                  });
+                  getData.mutateAsync(username);
                 });
               }}
             >
               X
+            </button>
+            <button
+              onClick={async () => {
+                let update = prompt("Update message", message);
+                if (update !== null) {
+                  patchData
+                    .mutateAsync({
+                      id: getData.data?.ids[i] ?? 0,
+                      message: update,
+                    })
+                    .then(() => {
+                      getData.mutateAsync(username);
+                    });
+                }
+              }}
+            >
+              U
             </button>
           </div>
         );
@@ -69,8 +87,6 @@ export default function UserPage() {
           if (messageInput.current?.value) {
             postData.mutateAsync(messageInput.current?.value).then(() => {
               getData.mutateAsync(username).then(() => {
-                setIds(getData.data?.ids ?? []);
-                setMessages(getData.data?.messages ?? []);
                 messageInput.current!.value = "";
               });
             });

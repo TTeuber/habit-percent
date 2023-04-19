@@ -2,7 +2,6 @@ import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { redirect } from "next/navigation";
 
 async function getData(
   username: string
@@ -23,6 +22,24 @@ async function postData(username: string, message: string): Promise<void> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
+  });
+
+  if (!res.ok) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+    });
+  }
+}
+
+async function patchData(
+  username: string,
+  id: number,
+  message: string
+): Promise<void> {
+  const res = await fetch(`http://localhost:5000/data/${username}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, message }),
   });
 
   if (!res.ok) {
@@ -61,4 +78,11 @@ export const dataRouter = createTRPCRouter({
     const res = await deleteData("tyler", input);
     return "success";
   }),
+
+  patch: publicProcedure
+    .input(z.object({ id: z.number(), message: z.string() }))
+    .mutation(async ({ input }) => {
+      const res = await patchData("tyler", input.id, input.message);
+      return "success";
+    }),
 });
