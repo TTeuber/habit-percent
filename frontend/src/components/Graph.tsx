@@ -1,4 +1,4 @@
-type Data = {
+export type Data = {
   name: string;
   target: number;
   value: number;
@@ -13,16 +13,8 @@ type SliceCoords = {
   point4: { x: number; y: number };
 };
 
-export default function Graph() {
-  const data: Data = [
-    { name: "a", target: 0.25, value: 0.2 },
-    { name: "b", target: 0.25, value: 0.3 },
-    { name: "c", target: 0.25, value: 0.3 },
-    { name: "d", target: 0.25, value: 0.1 },
-  ];
-
-  const width = 400;
-  const height = 400;
+export default function Graph({ width, data }: { width: number; data: Data }) {
+  const height = width;
   const baseLength = width / 4;
 
   function getStartAngle(data: Data, index: number) {
@@ -88,10 +80,22 @@ export default function Graph() {
   const slices = data.map((_, i) => createSlice(data, i));
 
   return (
-    <div className={"border"}>
+    <div
+      className={"relative border"}
+      style={{ width: width + "px", height: height + "px" }}
+    >
+      <p className={"absolute left-1/2 -translate-x-1/2 text-4xl"}>Title</p>
+      {/*prettier-ignore*/}
+      <div className={"absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2"}>
+        <p id="category" className={`text-center text-[150%]`}>Habits</p>
+        <p id={"percent"}></p>
+      </div>
       <svg width={width} height={height}>
-        <g transform={`translate(${width / 2}, ${height / 2})`}>
-          <circle r={width / 3} fill={"hsla(0,0%,50%,50%)"} />
+        <g
+          transform={`translate(${width / 2}, ${height / 2})`}
+          className={"group"}
+        >
+          {/*<circle r={width / 3} fill={"hsla(0,0%,50%,50%)"} />*/}
           {slices.map((slice, i) => {
             const { point1, outerRadius, point2, point3, innerRadius, point4 } =
               slice;
@@ -102,7 +106,15 @@ export default function Graph() {
                     d={`M ${point1.x} ${point1.y} A ${outerRadius} ${outerRadius} 0 ${data[i]!.target > 0.5 ? "1" : "0"} 1 
                     ${point2.x} ${point2.y} L ${point3.x} ${point3.y} A ${innerRadius} ${innerRadius} 0 
                     ${data[i]!.target > 0.5 ? "1" : "0"} 0 ${point4.x} ${point4.y} Z`}
-                    fill={`hsla(${i * 40 + 180},40%,50%,50%)`}
+                    fill={`hsl(${i * 40 + 180},40%,50%)`} className={"group-hover:opacity-70 hover:!opacity-100 cursor-pointer"}
+                    onMouseEnter={() => {
+                      document.getElementById("category")!.innerHTML = data[i]!.name;
+                      document.getElementById("percent")!.innerHTML = `${data[i]!.value * 100}%/${data[i]!.target * 100}%`
+                    }}
+                    onMouseLeave={() => {
+                      document.getElementById("category")!.innerHTML = "Habits";
+                      document.getElementById("percent")!.innerHTML = "";
+                    }}
                     />
             );
           })}

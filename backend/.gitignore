@@ -6,3 +6,5 @@ pyvenv.cfg
 include
 credentials.csv
 test.py
+data.json
+data.yml

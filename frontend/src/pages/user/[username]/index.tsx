@@ -2,8 +2,7 @@
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { redirect } from "next/navigation";
-import Graph from "~/components/Graph";
+import Graph, { Data } from "~/components/Graph";
 
 export default function UserPage() {
   const router = useRouter();
@@ -39,9 +38,16 @@ export default function UserPage() {
 
   let messageInput = useRef<HTMLInputElement>(null);
 
+  const data: Data = [
+    { name: "a", target: 0.25, value: 0.2 },
+    { name: "b", target: 0.25, value: 0.3 },
+    { name: "c", target: 0.25, value: 0.3 },
+    { name: "d", target: 0.25, value: 0.1 },
+  ];
+
   return (
     <div>
-      <Graph />
+      <Graph width={400} data={data} />
       <h1>{username}</h1>
       {getData.data?.messages.map((message, i) => {
         return (
