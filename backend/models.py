@@ -38,8 +38,8 @@ class Activities(db.Model):
     name = db.Column(db.String(64), index=True)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    targetPercentage = db.Column(db.Integer)
-    actualPercentage = db.Column(db.Integer)
+    targetPercentage = db.Column(db.Float)
+    actualPercentage = db.Column(db.Float)
 
     entries = db.relationship('Entries', backref='activities', lazy='dynamic')
 

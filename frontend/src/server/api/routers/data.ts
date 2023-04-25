@@ -2,9 +2,9 @@ import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { Data } from "~/components/Graph";
+import { CategoryData } from "~/components/Graph";
 
-async function getData(username: string): Promise<Data> {
+async function getData(username: string): Promise<CategoryData> {
   const res = await fetch(`http://backend/data/${username}`);
 
   if (!res.ok) {
@@ -13,7 +13,7 @@ async function getData(username: string): Promise<Data> {
     });
   }
 
-  return (await res.json()) as Data;
+  return (await res.json()) as CategoryData;
 }
 
 async function postData(username: string, message: string): Promise<void> {

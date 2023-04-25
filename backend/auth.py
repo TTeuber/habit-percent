@@ -68,8 +68,7 @@ def signup():
 def logout():
     try:
         logout_user()
-        return "Logged out", 200
-        # return redirect('http://localhost:3000/login')
+        return redirect('http://localhost:3000/')
     except Exception as e:
         print(e)
         return redirect('http://localhost:3000/error')
