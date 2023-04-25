@@ -2,11 +2,10 @@ import { z } from "zod";
 import fetch from "node-fetch";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { Data } from "~/components/Graph";
 
-async function getData(
-  username: string
-): Promise<{ messages: string[]; ids: number[] }> {
-  const res = await fetch(`http://localhost:5000/data/${username}`);
+async function getData(username: string): Promise<Data> {
+  const res = await fetch(`http://backend/data/${username}`);
 
   if (!res.ok) {
     throw new TRPCError({
@@ -14,11 +13,11 @@ async function getData(
     });
   }
 
-  return (await res.json()) as { messages: string[]; ids: number[] };
+  return (await res.json()) as Data;
 }
 
 async function postData(username: string, message: string): Promise<void> {
-  const res = await fetch(`http://localhost:5000/data/${username}`, {
+  const res = await fetch(`http://backend/data/${username}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
@@ -36,7 +35,7 @@ async function patchData(
   id: number,
   message: string
 ): Promise<void> {
-  const res = await fetch(`http://localhost:5000/data/${username}`, {
+  const res = await fetch(`http://backend/data/${username}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, message }),
@@ -50,7 +49,7 @@ async function patchData(
 }
 
 async function deleteData(username: string, id: number): Promise<void> {
-  const res = await fetch(`http://localhost:5000/data/${username}`, {
+  const res = await fetch(`http://backend/data/${username}`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),
@@ -66,7 +65,7 @@ async function deleteData(username: string, id: number): Promise<void> {
 export const dataRouter = createTRPCRouter({
   get: publicProcedure.input(z.string()).mutation(async ({ input }) => {
     const data = await getData(input);
-    return { messages: data.messages, ids: data.ids };
+    return data;
   }),
 
   post: publicProcedure.input(z.string()).mutation(async ({ input }) => {

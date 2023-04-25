@@ -18,5 +18,15 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+
+  async rewrites() {
+    return [
+      {
+        source: "/backend/:path*",
+        destination: "http://backend/:path*",
+      },
+    ];
+  }
+
 };
 export default config;

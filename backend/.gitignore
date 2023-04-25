@@ -8,3 +8,4 @@ credentials.csv
 test.py
 data.json
 data.yml
+Dockerfile

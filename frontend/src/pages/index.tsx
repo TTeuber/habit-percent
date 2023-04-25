@@ -2,11 +2,16 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { api } from "~/utils/api";
-// import fetch from "node-fetch";
+import { router } from "next/client";
 
 const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: "from tRPC" });
 
+  const test = api.test.redirect.useQuery();
+
+  fetch("http://backend/test")
+    .then((res) => res.json())
+    .then((data) => console.log(data));
   return (
     <>
       <Head>
@@ -15,10 +20,21 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <h1>{hello.data?.greeting}</h1>
+      <h1>{test.data?.test.message}</h1>
       <div className={"flex flex-col gap-3"}>
         <Link href="/login">Login</Link>
         <Link href="/signup">Signup</Link>
       </div>
+      <form
+        action={"http://backend/test"}
+        method={"post"}
+        onSubmit={(e) => {
+          e.preventDefault();
+          console.log(e);
+        }}
+      >
+        <button type={"submit"}>Test</button>
+      </form>
     </>
   );
 };

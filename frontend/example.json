@@ -1,0 +1,32 @@
+{
+  "tyler": {
+    "categories" : [
+      {
+        "name": "social",
+        "activities": [
+          {
+            "name": "visit friends"
+          },
+          {
+            "name": "visit family"
+          }
+        ],
+        "targetPercentage": 0.5,
+        "currentPercentage": 0.3
+      },
+      {
+        "name": "work",
+        "activities": [
+          {
+            "name": "work on project"
+          },
+          {
+            "name": "meet with client"
+          }
+        ],
+        "targetPercentage": 0.5,
+        "currentPercentage": 0.8
+      }
+    ]
+  }
+}

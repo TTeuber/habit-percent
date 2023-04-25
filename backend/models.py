@@ -1,27 +1,36 @@
-from app import db
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+
+db = SQLAlchemy()
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
+    password = db.Column(db.String(128))
 
     categories = db.relationship('Categories', backref='user', lazy='dynamic')
     activities = db.relationship('Activities', backref='user', lazy='dynamic')
 
-    def __repr__(self):
-        return '<User {}>'.format(self.username)
+    def __init__(self, _username, _password):
+        self.username = _username
+        self.password = _password
 
 
 class Categories(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    targetPercentage = db.Column(db.Integer)
-    actualPercentage = db.Column(db.Integer)
+    targetPercentage = db.Column(db.Float)
+    actualPercentage = db.Column(db.Float)
 
     activities = db.relationship('Activities', backref='categories', lazy='dynamic')
+
+    def __init__(self, _user, _name, _target, _actual=0):
+        self.user_id = _user.id
+        self.name = _name
+        self.targetPercentage = _target
+        self.actualPercentage = _actual
 
 
 class Activities(db.Model):
