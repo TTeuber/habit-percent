@@ -1,8 +1,18 @@
 "use client";
 import { useRouter } from "next/router";
-import { api } from "~/utils/api";
-import { useEffect, useRef, useState } from "react";
-import Graph, { CategoryData } from "~/components/Graph";
+import { useEffect, createContext, useState } from "react";
+import Graph from "~/components/Graph";
+import List from "~/components/List";
+import EditModal from "~/components/EditModal";
+
+export type CategoryData = {
+  name: string;
+  target: number;
+  value: number;
+  id: number;
+}[];
+
+const dataContext = createContext<any>({});
 
 export default function UserPage() {
   const router = useRouter();
@@ -17,9 +27,23 @@ export default function UserPage() {
       });
   }, []);
 
+  const [select, setSelect] = useState("");
+
   return (
     <div>
-      <Graph width={400} data={data} title={"Habits"} subtitle={"categories"} />
+      <p className={"h-6"}>{select}</p>
+      <dataContext.Provider value={{ select, setSelect }}>
+        <Graph
+          width={400}
+          data={data}
+          title={"Habits"}
+          subtitle={"categories"}
+          context={dataContext}
+        />
+        <List data={data} context={dataContext} />
+      </dataContext.Provider>
+      <button className={"border p-2"}>Edit Categories</button>
+      <EditModal data={data} type={"category"} />
       <form action={"/backend/logout"} method={"post"}>
         <button type={"submit"}>Log Out</button>
       </form>

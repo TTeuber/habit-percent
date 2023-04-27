@@ -1,16 +1,11 @@
 from flask import Blueprint, request, redirect
-from flask_login import login_user, logout_user, current_user, login_required, LoginManager
+from flask_login import login_user, logout_user, login_required, LoginManager
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import User, db
 
 auth = Blueprint('auth', __name__)
 
 login_manager = LoginManager()
-
-
-@auth.route('/authtest')
-def test():
-    return {"message": "auth success"}, 200
 
 
 @login_manager.user_loader

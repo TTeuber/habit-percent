@@ -1,5 +1,6 @@
 from flask import Flask
 import csv
+import os
 from models import db
 from auth import auth, login_manager
 from api import api
@@ -7,13 +8,11 @@ from api import api
 app = Flask(__name__)
 api.init_app(app)
 
-credentials = csv.DictReader(open('credentials.csv', 'r'))
-credentials = next(credentials)
-username = credentials['username']
-password = credentials['password']
-host = credentials['host']
-port = credentials['port']
-database = credentials['database']
+username = "postgres"
+password = os.environ.get("DB_PASSWORD")
+host = os.environ.get("DB_HOST")
+port = "5432"
+database = "postgres"
 
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = 'postgresql://' + username + ':' + password + '@' + host + ':' + port + '/' + database

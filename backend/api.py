@@ -6,7 +6,7 @@ from flask import request
 api = Api()
 
 
-class UserData(Resource):
+class CategoryData(Resource):
     @login_required
     def get(self, username):
         user_data = Categories.query.filter_by(user_id=current_user.id).all()
@@ -51,7 +51,7 @@ class UserData(Resource):
             return {"message": "fail"}, 400
 
 
-api.add_resource(UserData, '/data/<string:username>')
+api.add_resource(CategoryData, '/data/<string:username>')
 
 
 class ActivityData(Resource):
