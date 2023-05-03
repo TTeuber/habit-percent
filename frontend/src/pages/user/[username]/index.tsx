@@ -29,6 +29,8 @@ export default function UserPage() {
 
   const [select, setSelect] = useState("");
 
+  const [showModal, setShowModal] = useState(true);
+
   return (
     <div>
       <p className={"h-6"}>{select}</p>
@@ -42,11 +44,12 @@ export default function UserPage() {
         />
         <List data={data} context={dataContext} />
       </dataContext.Provider>
-      <button className={"border p-2"}>Edit Categories</button>
-      <EditModal data={data} type={"category"} />
-      <form action={"/backend/logout"} method={"post"}>
-        <button type={"submit"}>Log Out</button>
-      </form>
+      <button className={"border p-2"} onClick={() => setShowModal(true)}>
+        Edit Categories
+      </button>
+      {showModal && (
+        <EditModal data={data} type={"category"} setShowModal={setShowModal} />
+      )}
     </div>
   );
 }

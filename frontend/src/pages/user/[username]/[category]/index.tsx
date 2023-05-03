@@ -2,6 +2,8 @@ import Graph from "~/components/Graph";
 import { useRouter } from "next/router";
 import { useEffect, useState, createContext } from "react";
 import List from "~/components/List";
+import { ErrorBoundary } from "next/dist/client/components/error-boundary";
+import Link from "next/link";
 
 export type ActivityData = {
   name: string;
@@ -29,15 +31,18 @@ export default function UserCategoryPage() {
   return (
     <>
       <h1>Category</h1>
+      <Link href={`/user/${router.query.username}`}>back</Link>
       <dataContext.Provider value={{ select, setSelect }}>
-        <Graph
-          width={400}
-          data={data}
-          title={router.query.category as string}
-          subtitle={"activities"}
-          context={dataContext}
-        />
-        <List data={data} context={dataContext} />
+        <ErrorBoundary errorComponent={() => <h1>error</h1>}>
+          <Graph
+            width={400}
+            data={data}
+            title={router.query.category as string}
+            subtitle={"activities"}
+            context={dataContext}
+          />
+          <List data={data} context={dataContext} />
+        </ErrorBoundary>
       </dataContext.Provider>
       <button className={""}>Edit Activities</button>
     </>
