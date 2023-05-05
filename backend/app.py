@@ -8,24 +8,24 @@ from api import api
 app = Flask(__name__)
 api.init_app(app)
 
-username = "postgres"
+username = os.environ.get("DB_USERNAME")
 password = os.environ.get("DB_PASSWORD")
 host = os.environ.get("DB_HOST")
-port = "5432"
-database = "postgres"
+port = os.environ.get("DB_PORT")
+database = os.environ.get("DB_NAME")
 
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = 'postgresql://' + username + ':' + password + '@' + host + ':' + port + '/' + database
 app.config['SECRET_KEY'] = 'secret'
 db.init_app(app)
 
+with app.app_context():
+    db.create_all()
+
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 app.register_blueprint(auth)
-
-with app.app_context():
-    db.create_all()
 
 
 @app.route('/test', methods=['GET', 'POST'])

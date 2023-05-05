@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/usr/src/app
+    ports:
+      - "5001:5001"
+    environment:
+      DB_HOST: "hostname"
+      DB_PORT: "port"
+      DB_NAME: "name"
+      DB_USERNAME: "username"
+      DB_PASSWORD: "password"
+    depends_on:
+      - database
+  frontend:
+    build: ./frontend
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+  database:
+    image: postgres
+    restart: always
+    hostname: "hostname"
+    environment:
+      POSTGRES_USER: "username"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "name"
+    ports:
+      - "5432:5432"

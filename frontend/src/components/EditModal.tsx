@@ -30,32 +30,21 @@ export default function EditModal({
     });
   }, []);
 
-  const editValidation = useRef(
-    z.array(
+  useEffect(() => {
+    sessionStorage.setItem("editData", JSON.stringify(editData));
+  }, []);
+
+  const editValidation = z
+    .array(
       z.object({
         name: z.string(),
-        target: z.number().min(0).max(100),
-        value: z.number().min(0).max(100),
+        target: z.number(),
+        value: z.number(),
       })
     )
-  );
-
-  const [test, setTest] = useState<any>(undefined);
-
-  useEffect(() => {
-    setTest(
-      z
-        .array(
-          z.object({
-            name: z.string(),
-            target: z.number().min(0).max(1),
-            value: z.number().min(0).max(1),
-            id: z.number(),
-          })
-        )
-        .safeParse(data).success
-    );
-  }, [data]);
+    .refine((arr) => {
+      return arr.reduce((acc, val) => acc + val.target, 0) === 1;
+    });
 
   return (
     <div
@@ -67,7 +56,6 @@ export default function EditModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className={"text-2xl"}>Edit Categories</h1>
-        <p className={"border"}>{test}</p>
         <p>{total.reduce((acc, val) => acc + val, 0)}</p>
         <EditContext.Provider value={{ total, setTotal }}>
           {editData.map((d, i) => {
@@ -90,16 +78,13 @@ export default function EditModal({
         <button
           className={"m-4"}
           onClick={() => {
-            if (total.reduce((num, acc) => num + acc, 0) === 100) {
-              alert("submit");
-            } else {
-              alert("total must be 100");
-            }
-
-            if (type === "category") {
-              sessionStorage.setItem("categories", JSON.stringify(editData));
-            } else {
-              sessionStorage.setItem("activities", JSON.stringify(editData));
+            try {
+              editValidation.parse(editData);
+              alert("success");
+            } catch (e) {
+              if (e instanceof z.ZodError) {
+                alert(e.issues);
+              }
             }
           }}
         >
@@ -130,8 +115,18 @@ function EditItem({
     setTotal(copy);
   }, [currentValue]);
 
+  const sessionData = useRef(JSON.parse(sessionStorage.getItem("editData")!));
+
   return (
     <div key={i} className={"flex gap-4"}>
+      {sessionData.current.map((a: { name: string; target: number }) => {
+        return (
+          <div>
+            <p>{a.name}</p>
+            <p>{a.target}</p>
+          </div>
+        );
+      })}
       <input
         ref={nameInput}
         type={"text"}
@@ -143,6 +138,13 @@ function EditItem({
           setCurrentValue(currentValue - 1);
           numberInput.current!.value = String(
             Number(numberInput.current!.value) - 1
+          );
+          sessionData.current.find(
+            (a: { name: string; target: number }) => a.name === d.name
+          ).target -= 0.01;
+          sessionStorage.setItem(
+            "editData",
+            JSON.stringify(sessionData.current)
           );
         }}
       >
@@ -169,6 +171,13 @@ function EditItem({
           setCurrentValue(currentValue + 1);
           numberInput.current!.value = String(
             Number(numberInput.current!.value) + 1
+          );
+          sessionData.current.find(
+            (a: { name: string }) => a.name === d.name
+          ).target += 0.01;
+          sessionStorage.setItem(
+            "editData",
+            JSON.stringify(sessionData.current)
           );
         }}
       >
