@@ -48,7 +48,12 @@ export default function UserPage() {
         Edit Categories
       </button>
       {showModal && (
-        <EditModal data={data} type={"category"} setShowModal={setShowModal} />
+        <EditModal
+          data={data}
+          setData={setData}
+          type={"category"}
+          setShowModal={setShowModal}
+        />
       )}
     </div>
   );

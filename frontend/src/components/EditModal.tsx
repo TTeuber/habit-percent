@@ -17,13 +17,15 @@ export default function EditModal({
   data,
   type,
   setShowModal,
+  setData,
 }: {
   data: CategoryData | ActivityData;
   type: "category" | "activity";
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setData: React.Dispatch<React.SetStateAction<CategoryData | ActivityData>>;
 }) {
-  const [total, setTotal] = useState<number[]>([0]);
   const [editData, setEditData] = useState<CategoryData | ActivityData>(data);
+  const total = useRef(editData.reduce((acc, val) => acc + val.target, 0));
 
   useEffect(() => {
     data.forEach((d) => {
@@ -39,13 +41,19 @@ export default function EditModal({
     .array(
       z.object({
         name: z.string(),
-        target: z.number(),
+        target: z
+          .number()
+          .min(0.01, { message: "All categories must be at least 1%" }),
         value: z.number(),
       })
     )
     .refine((arr) => {
       return arr.reduce((acc, val) => acc + val.target, 0) === 1;
-    });
+    }, "Total must be 100%")
+    .refine((arr) => {
+      const names = arr.map((d) => d.name);
+      return names.length === new Set(names).size;
+    }, "Each name must be unique");
 
   return (
     <div
@@ -57,8 +65,8 @@ export default function EditModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className={"text-2xl"}>Edit Categories</h1>
-        {/*<p>{total.reduce((acc, val) => acc + val, 0)}</p>*/}
-        <EditContext.Provider value={{ total, setTotal }}>
+        <p>{editData.reduce((acc, val) => acc + val.target, 0)}</p>
+        <EditContext.Provider value={{ total, setEditData }}>
           {editData.map((d, i) => {
             return <EditItem d={d} i={i} key={i} context={EditContext} />;
           })}
@@ -83,20 +91,26 @@ export default function EditModal({
           className={"m-4 data-[enabled=false]:text-gray-500"}
           onClick={() => {
             try {
-              editValidation.parse(editData);
+              editValidation.parse(
+                JSON.parse(sessionStorage.getItem("editData")!)
+              );
               alert("success");
+              setData(JSON.parse(sessionStorage.getItem("editData")!));
+              setShowModal(false);
             } catch (e) {
               if (e instanceof z.ZodError) {
-                alert(e.issues);
+                e.issues.forEach((issue) => {
+                  alert(issue.message);
+                });
               }
             }
           }}
-          data-enabled={total.reduce((i, a) => i + a, 0) === 100}
-          disabled={total.reduce((i, a) => i + a, 0) !== 100}
+          data-enabled={total.current === 1}
+          disabled={total.current !== 1}
         >
           Submit
         </button>
-        <p>{total.reduce((i, a) => i + a, 0) === 100 ? "true" : "false"}</p>
+        <p>{total.current === 1 ? "true" : "false"}</p>
       </div>
     </div>
   );
@@ -114,26 +128,30 @@ function EditItem({
   const [currentValue, setCurrentValue] = useState<number>(d.target * 100);
   const numberInput = useRef<HTMLInputElement>(null);
   const nameInput = useRef<HTMLInputElement>(null);
-  const { total, setTotal } = useContext(context);
-
-  useEffect(() => {
-    const copy = total.slice();
-    copy[i] = currentValue;
-    setTotal(copy);
-  }, [currentValue]);
+  const { total, setEditData } = useContext(context);
 
   const sessionData = useRef(JSON.parse(sessionStorage.getItem("editData")!));
 
+  useEffect(() => {
+    sessionData.current = JSON.parse(sessionStorage.getItem("editData")!);
+  }, []);
+
   return (
     <div key={i} className={"flex gap-4"}>
-      {sessionData.current.map((a: { name: string; target: number }) => {
-        return (
-          <div>
-            <p>{a.name}</p>
-            <p>{a.target.toFixed(2)}</p>
-          </div>
-        );
-      })}
+      <button
+        onClick={() => {
+          const confirm = window.confirm("Are you sure you want to delete?");
+          if (!confirm) return;
+          const data = JSON.parse(sessionStorage.getItem("editData")!);
+          data.splice(i, 1);
+          sessionStorage.setItem("editData", JSON.stringify(data));
+          setEditData((prev: { id: string }[]) =>
+            prev.filter((a) => a.id !== d.id)
+          );
+        }}
+      >
+        X
+      </button>
       <input
         ref={nameInput}
         type={"text"}
@@ -164,10 +182,9 @@ function EditItem({
           sessionData.current.find(
             (a: { id: string }) => a.id === d.id
           ).target -= 0.01;
-          sessionStorage.setItem(
-            "editData",
-            JSON.stringify(sessionData.current)
-          );
+          const x = JSON.parse(sessionStorage.getItem("editData")!);
+          x.find((a: { id: string }) => a.id === d.id).target -= 0.01;
+          sessionStorage.setItem("editData", JSON.stringify(x));
         }}
       >
         -
@@ -204,10 +221,9 @@ function EditItem({
           sessionData.current.find(
             (a: { id: string }) => a.id === d.id
           ).target += 0.01;
-          sessionStorage.setItem(
-            "editData",
-            JSON.stringify(sessionData.current)
-          );
+          const x = JSON.parse(sessionStorage.getItem("editData")!);
+          x.find((a: { id: string }) => a.id === d.id).target += 0.01;
+          sessionStorage.setItem("editData", JSON.stringify(x));
         }}
       >
         +
