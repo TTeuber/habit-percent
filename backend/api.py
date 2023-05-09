@@ -14,7 +14,7 @@ class CategoryData(Resource):
         target = [user.targetPercentage for user in user_data]
         value = [user.actualPercentage for user in user_data]
         ids = [user.id for user in user_data]
-        data = [{"name": n, "target": t, "value": v, "id": i} for n, t, v, i in zip(name, target, value, ids)]
+        data = [{"name": n, "target": t, "value": v, "id": str(i)} for n, t, v, i in zip(name, target, value, ids)]
         return {"data": data}, 200
 
     @login_required

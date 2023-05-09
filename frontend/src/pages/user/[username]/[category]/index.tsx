@@ -9,7 +9,7 @@ export type ActivityData = {
   name: string;
   target: number;
   value: number;
-  id: number;
+  id: string;
 }[];
 
 const dataContext = createContext<any>({});

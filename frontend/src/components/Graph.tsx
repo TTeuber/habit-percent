@@ -46,7 +46,7 @@ export default function Graph({
   }
 
   function createSlice(data: CategoryData, index: number) {
-    const targetLength = data[index]!.target * 100;
+    const targetLength = width / 12;
     const actualPercent = data[index]!.value / data[index]!.target;
 
     const point1 = {

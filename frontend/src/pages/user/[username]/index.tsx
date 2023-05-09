@@ -9,7 +9,7 @@ export type CategoryData = {
   name: string;
   target: number;
   value: number;
-  id: number;
+  id: string;
 }[];
 
 const dataContext = createContext<any>({});

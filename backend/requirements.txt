@@ -19,3 +19,4 @@ typing-extensions==4.5.0
 Werkzeug==2.3.0
 wheel==0.40.0
 WTForms==3.0.1
+cuid==0.4

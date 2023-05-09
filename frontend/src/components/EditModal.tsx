@@ -9,6 +9,7 @@ import React, {
   Context,
   useEffect,
 } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 const EditContext = createContext<any>({});
 
@@ -21,7 +22,7 @@ export default function EditModal({
   type: "category" | "activity";
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [total, setTotal] = useState<number[]>([50]);
+  const [total, setTotal] = useState<number[]>([0]);
   const [editData, setEditData] = useState<CategoryData | ActivityData>(data);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export default function EditModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className={"text-2xl"}>Edit Categories</h1>
-        <p>{total.reduce((acc, val) => acc + val, 0)}</p>
+        {/*<p>{total.reduce((acc, val) => acc + val, 0)}</p>*/}
         <EditContext.Provider value={{ total, setTotal }}>
           {editData.map((d, i) => {
             return <EditItem d={d} i={i} key={i} context={EditContext} />;
@@ -64,19 +65,22 @@ export default function EditModal({
         </EditContext.Provider>
         <button
           onClick={() => {
-            if (!sessionStorage.getItem("new")) {
-              sessionStorage.setItem("new", "0");
-              setEditData([
-                ...editData,
-                { name: "new", target: 0, value: 0, id: 0 },
-              ]);
-            }
+            const data = JSON.parse(sessionStorage.getItem("editData")!);
+            const newData = {
+              name: "New",
+              target: 0,
+              value: 0,
+              id: uuidv4(),
+            };
+            data.push(newData);
+            sessionStorage.setItem("editData", JSON.stringify(data));
+            setEditData((prev) => [...prev, newData]);
           }}
         >
           New
         </button>
         <button
-          className={"m-4"}
+          className={"m-4 data-[enabled=false]:text-gray-500"}
           onClick={() => {
             try {
               editValidation.parse(editData);
@@ -87,9 +91,12 @@ export default function EditModal({
               }
             }
           }}
+          data-enabled={total.reduce((i, a) => i + a, 0) === 100}
+          disabled={total.reduce((i, a) => i + a, 0) !== 100}
         >
           Submit
         </button>
+        <p>{total.reduce((i, a) => i + a, 0) === 100 ? "true" : "false"}</p>
       </div>
     </div>
   );
@@ -100,7 +107,7 @@ function EditItem({
   i,
   context,
 }: {
-  d: { name: string; target: number };
+  d: { name: string; target: number; id: string };
   i: number;
   context: Context<any>;
 }) {
@@ -123,7 +130,7 @@ function EditItem({
         return (
           <div>
             <p>{a.name}</p>
-            <p>{a.target}</p>
+            <p>{a.target.toFixed(2)}</p>
           </div>
         );
       })}
@@ -132,6 +139,21 @@ function EditItem({
         type={"text"}
         className={"grow"}
         defaultValue={d.name}
+        onChange={() => {
+          sessionData.current.find((a: { id: string }) => a.id === d.id).name =
+            nameInput.current!.value;
+          if (nameInput.current!.value.length > 0) {
+            sessionStorage.setItem(
+              "editData",
+              JSON.stringify(sessionData.current)
+            );
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            nameInput.current!.blur();
+          }
+        }}
       />
       <button
         onClick={() => {
@@ -140,7 +162,7 @@ function EditItem({
             Number(numberInput.current!.value) - 1
           );
           sessionData.current.find(
-            (a: { name: string; target: number }) => a.name === d.name
+            (a: { id: string }) => a.id === d.id
           ).target -= 0.01;
           sessionStorage.setItem(
             "editData",
@@ -158,6 +180,13 @@ function EditItem({
         onBlur={() => {
           const value = Number(numberInput.current?.value);
           setCurrentValue(value);
+          sessionData.current.find(
+            (a: { id: string }) => a.id === d.id
+          ).target = value / 100;
+          sessionStorage.setItem(
+            "editData",
+            JSON.stringify(sessionData.current)
+          );
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -173,7 +202,7 @@ function EditItem({
             Number(numberInput.current!.value) + 1
           );
           sessionData.current.find(
-            (a: { name: string }) => a.name === d.name
+            (a: { id: string }) => a.id === d.id
           ).target += 0.01;
           sessionStorage.setItem(
             "editData",
