@@ -4,6 +4,7 @@ import { useEffect, createContext, useState } from "react";
 import Graph from "~/components/Graph";
 import List from "~/components/List";
 import EditModal from "~/components/EditModal";
+import Entries from "~/components/Entries";
 
 export type CategoryData = {
   name: string;
@@ -29,8 +30,9 @@ export default function UserPage() {
 
   const [select, setSelect] = useState("");
 
-  const [showModal, setShowModal] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
+  const [showEntries, setShowEntries] = useState(false);
   return (
     <div>
       <p className={"h-6"}>{select}</p>
@@ -42,7 +44,7 @@ export default function UserPage() {
           subtitle={"categories"}
           context={dataContext}
         />
-        <List data={data} context={dataContext} />
+        <List data={data} context={dataContext} type={"category"} />
       </dataContext.Provider>
       <button className={"border p-2"} onClick={() => setShowModal(true)}>
         Edit Categories
@@ -51,10 +53,14 @@ export default function UserPage() {
         <EditModal
           data={data}
           setData={setData}
-          type={"category"}
+          endpoint={"/backend/data/" + username}
           setShowModal={setShowModal}
         />
       )}
+      <button className={"border p-2"} onClick={() => setShowEntries(true)}>
+        Entries
+      </button>
+      {showEntries && <Entries setShowEntries={setShowEntries} />}
     </div>
   );
 }

@@ -10,22 +10,25 @@ import React, {
   useEffect,
 } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "next/router";
 
 const EditContext = createContext<any>({});
 
 export default function EditModal({
   data,
-  type,
+  endpoint,
   setShowModal,
   setData,
 }: {
   data: CategoryData | ActivityData;
-  type: "category" | "activity";
+  endpoint: string;
   setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
   setData: React.Dispatch<React.SetStateAction<CategoryData | ActivityData>>;
 }) {
   const [editData, setEditData] = useState<CategoryData | ActivityData>(data);
   const total = useRef(editData.reduce((acc, val) => acc + val.target, 0));
+
+  const router = useRouter();
 
   useEffect(() => {
     data.forEach((d) => {
@@ -68,7 +71,15 @@ export default function EditModal({
         <p>{editData.reduce((acc, val) => acc + val.target, 0)}</p>
         <EditContext.Provider value={{ total, setEditData }}>
           {editData.map((d, i) => {
-            return <EditItem d={d} i={i} key={i} context={EditContext} />;
+            return (
+              <EditItem
+                d={d}
+                i={i}
+                key={i}
+                context={EditContext}
+                endpoint={endpoint}
+              />
+            );
           })}
         </EditContext.Provider>
         <button
@@ -76,27 +87,61 @@ export default function EditModal({
             const data = JSON.parse(sessionStorage.getItem("editData")!);
             const newData = {
               name: "New",
-              target: 0,
+              target: 1 - editData.reduce((acc, val) => acc + val.target, 0),
               value: 0,
               id: uuidv4(),
             };
             data.push(newData);
             sessionStorage.setItem("editData", JSON.stringify(data));
             setEditData((prev) => [...prev, newData]);
+            fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: newData.name,
+                target: newData.target,
+                value: newData.value,
+                id: newData.id,
+              }),
+            })
+              .then(() => {
+                alert("Success!");
+              })
+              .catch((e) => {
+                alert("Error: " + e);
+              });
           }}
         >
           New
         </button>
         <button
-          className={"m-4 data-[enabled=false]:text-gray-500"}
+          className={"m-4"}
           onClick={() => {
+            const data = JSON.parse(sessionStorage.getItem("editData")!);
             try {
-              editValidation.parse(
-                JSON.parse(sessionStorage.getItem("editData")!)
-              );
-              alert("success");
+              // editValidation.parse(
+              //   JSON.parse(sessionStorage.getItem("editData")!)
+              // );
+              fetch(endpoint, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  data,
+                }),
+              })
+                .then(() => {
+                  alert("Success!");
+                })
+                .catch((e) => {
+                  alert("Error: " + e);
+                });
               setData(JSON.parse(sessionStorage.getItem("editData")!));
               setShowModal(false);
+              router.reload();
             } catch (e) {
               if (e instanceof z.ZodError) {
                 e.issues.forEach((issue) => {
@@ -105,8 +150,6 @@ export default function EditModal({
               }
             }
           }}
-          data-enabled={total.current === 1}
-          disabled={total.current !== 1}
         >
           Submit
         </button>
@@ -120,10 +163,12 @@ function EditItem({
   d,
   i,
   context,
+  endpoint,
 }: {
   d: { name: string; target: number; id: string };
   i: number;
   context: Context<any>;
+  endpoint: string;
 }) {
   const [currentValue, setCurrentValue] = useState<number>(d.target * 100);
   const numberInput = useRef<HTMLInputElement>(null);
@@ -148,6 +193,21 @@ function EditItem({
           setEditData((prev: { id: string }[]) =>
             prev.filter((a) => a.id !== d.id)
           );
+          fetch(endpoint, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: d.id,
+            }),
+          })
+            .then(() => {
+              alert("Success!");
+            })
+            .catch((e) => {
+              alert("Error: " + e);
+            });
         }}
       >
         X
@@ -161,10 +221,10 @@ function EditItem({
           sessionData.current.find((a: { id: string }) => a.id === d.id).name =
             nameInput.current!.value;
           if (nameInput.current!.value.length > 0) {
-            sessionStorage.setItem(
-              "editData",
-              JSON.stringify(sessionData.current)
-            );
+            const data = JSON.parse(sessionStorage.getItem("editData")!);
+            data.find((a: { id: string }) => a.id === d.id).name =
+              nameInput.current!.value;
+            sessionStorage.setItem("editData", JSON.stringify(data));
           }
         }}
         onKeyDown={(e) => {
@@ -182,9 +242,9 @@ function EditItem({
           sessionData.current.find(
             (a: { id: string }) => a.id === d.id
           ).target -= 0.01;
-          const x = JSON.parse(sessionStorage.getItem("editData")!);
-          x.find((a: { id: string }) => a.id === d.id).target -= 0.01;
-          sessionStorage.setItem("editData", JSON.stringify(x));
+          const data = JSON.parse(sessionStorage.getItem("editData")!);
+          data.find((a: { id: string }) => a.id === d.id).target -= 0.01;
+          sessionStorage.setItem("editData", JSON.stringify(data));
         }}
       >
         -
@@ -195,15 +255,17 @@ function EditItem({
         defaultValue={currentValue}
         className={"w-6"}
         onBlur={() => {
+          if (numberInput.current!.value.length === 0) {
+            numberInput.current!.value = String(currentValue);
+          }
           const value = Number(numberInput.current?.value);
           setCurrentValue(value);
           sessionData.current.find(
             (a: { id: string }) => a.id === d.id
           ).target = value / 100;
-          sessionStorage.setItem(
-            "editData",
-            JSON.stringify(sessionData.current)
-          );
+          const data = JSON.parse(sessionStorage.getItem("editData")!);
+          data.find((a: { id: string }) => a.id === d.id).target = value / 100;
+          sessionStorage.setItem("editData", JSON.stringify(data));
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -221,9 +283,9 @@ function EditItem({
           sessionData.current.find(
             (a: { id: string }) => a.id === d.id
           ).target += 0.01;
-          const x = JSON.parse(sessionStorage.getItem("editData")!);
-          x.find((a: { id: string }) => a.id === d.id).target += 0.01;
-          sessionStorage.setItem("editData", JSON.stringify(x));
+          const data = JSON.parse(sessionStorage.getItem("editData")!);
+          data.find((a: { id: string }) => a.id === d.id).target += 0.01;
+          sessionStorage.setItem("editData", JSON.stringify(data));
         }}
       >
         +

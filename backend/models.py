@@ -40,8 +40,8 @@ class Categories(db.Model):
 class Activities(db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(64), index=True)
-    category_id = db.Column(UUID(), db.ForeignKey('categories.id'))
-    user_id = db.Column(UUID(), db.ForeignKey('user.id'))
+    category_id = db.Column(UUID(), db.ForeignKey('categories.id'), index=True)
+    user_id = db.Column(UUID(), db.ForeignKey('user.id'), index=True)
     targetPercentage = db.Column(db.Float)
     actualPercentage = db.Column(db.Float)
 
@@ -58,8 +58,8 @@ class Activities(db.Model):
 
 class Entries(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    activity_id = db.Column(UUID(), db.ForeignKey('activities.id'))
-    user_id = db.Column(UUID(), db.ForeignKey('user.id'))
+    activity_id = db.Column(UUID(), db.ForeignKey('activities.id'), index=True)
+    user_id = db.Column(UUID(), db.ForeignKey('user.id'), index=True)
     date = db.Column(db.Date)
     completed = db.Column(db.Boolean)
 

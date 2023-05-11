@@ -6,9 +6,11 @@ import { useRouter } from "next/router";
 export default function List({
   data,
   context,
+  type,
 }: {
   data: CategoryData | ActivityData;
   context: Context<any>;
+  type: "category" | "activity";
 }) {
   const { select, setSelect } = useContext(context);
   const router = useRouter();
@@ -32,9 +34,11 @@ export default function List({
             onMouseEnter={() => setSelect(d.name)}
             onMouseLeave={() => setSelect("")}
             onClick={() => {
-              router
-                .push("/user/" + router.query.username + "/" + d.name)
-                .catch((e) => console.log(e));
+              if (type === "category") {
+                router
+                  .push("/user/" + router.query.username + "/" + d.name)
+                  .catch((e) => console.log(e));
+              }
             }}
           >
             <h2>{d.name}</h2>

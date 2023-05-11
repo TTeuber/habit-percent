@@ -21,7 +21,7 @@ class CategoryData(Resource):
     def post(self, username):
         if request.get_json():
             user_data = Categories(current_user, request.get_json()['name'], request.get_json()['target'],
-                                   request.get_json()['value'])
+                                   request.get_json()['value'], request.get_json()['id'])
             db.session.add(user_data)
             db.session.commit()
             return {"message": "success"}, 200
@@ -41,10 +41,12 @@ class CategoryData(Resource):
     @login_required
     def patch(self, username):
         if request.get_json():
-            user_data = Categories.query.filter_by(id=request.get_json()['id']).first()
-            user_data.name = request.get_json()['name']
-            user_data.targetPercentage = request.get_json()['target']
-            user_data.actualPercentage = request.get_json()['value']
+            for data in request.get_json()["data"]:
+                user_data = Categories.query.filter_by(id=data['id']).first()
+                user_data.name = data['name']
+                user_data.targetPercentage = data['target']
+                user_data.actualPercentage = data['value']
+                user_data.id = data['id']
             db.session.commit()
             return {"message": "success"}, 200
         else:
@@ -62,8 +64,48 @@ class ActivityData(Resource):
         name = [user.name for user in user_data]
         target = [user.targetPercentage for user in user_data]
         value = [user.actualPercentage for user in user_data]
-        data = [{"name": n, "target": t, "value": v} for n, t, v in zip(name, target, value)]
+        ids = [user.id for user in user_data]
+        data = [{"name": n, "target": t, "value": v, "id": str(i)} for n, t, v, i in zip(name, target, value, ids)]
         return {"data": data}, 200
+
+    @login_required
+    def post(self, username, category):
+        if request.get_json():
+            activity_category = Categories.query.filter_by(user_id=current_user.id, name=category).first()
+            user_data = Activities(current_user, activity_category, request.get_json()['name'],
+                                   request.get_json()['target'],
+                                   request.get_json()['value'], request.get_json()['id'])
+            db.session.add(user_data)
+            db.session.commit()
+            return {"message": "success"}, 200
+        else:
+            return {"message": "fail"}, 400
+
+    @login_required
+    def delete(self, username, category):
+        if request.get_json():
+            user_data = Activities.query.filter_by(id=request.get_json()['id']).first()
+            db.session.delete(user_data)
+            db.session.commit()
+            return {"message": "success"}, 200
+        else:
+            return {"message": "fail"}, 400
+
+    @login_required
+    def patch(self, username, category):
+        if request.get_json():
+            category_id = Categories.query.filter_by(user_id=current_user.id, name=category).first().id
+            for data in request.get_json()["data"]:
+                user_data = Activities.query.filter_by(category_id=category_id, id=data['id']).first()
+                user_data.category_id = category_id
+                user_data.name = data['name']
+                user_data.targetPercentage = data['target']
+                user_data.actualPercentage = data['value']
+                user_data.id = data['id']
+            db.session.commit()
+            return {"message": "success"}, 200
+        else:
+            return {"message": "fail"}, 400
 
 
 api.add_resource(ActivityData, '/activitydata/<string:username>/<string:category>')

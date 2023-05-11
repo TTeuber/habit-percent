@@ -47,8 +47,10 @@ export default function Graph({
 
   function createSlice(data: CategoryData, index: number) {
     const targetLength = width / 12;
-    const actualPercent = data[index]!.value / data[index]!.target;
-
+    const actualPercent =
+      data[index]!.value !== 0
+        ? Math.max(data[index]!.value / data[index]!.target, 0.2)
+        : 1;
     const point1 = {
       x:
         (baseLength + actualPercent * targetLength) *
@@ -119,7 +121,8 @@ export default function Graph({
                 d={`M ${point1.x} ${point1.y} A ${outerRadius} ${outerRadius} 0 ${data[i]!.target > 0.5 ? "1" : "0"} 1 
                 ${point2.x} ${point2.y} L ${point3.x} ${point3.y} A ${innerRadius} ${innerRadius} 0 
                 ${data[i]!.target > 0.5 ? "1" : "0"} 0 ${point4.x} ${point4.y} Z`}
-                fill={`hsl(${(i * 35) % 110 + 180},40%,50%)`}
+                fill={data[i]!.value !== 0 ? `hsl(${(i * 35) % 110 + 180},40%,50%)`: "black"}
+                stroke={data[i]!.value !== 0 ? "none" : `hsl(${(i * 35) % 110 + 180},40%,50%)`}
                 data-selected={select === data[i]!.name || select === ""}
                 className={"data-[selected=false]:opacity-70 data-[selected=true]:!opacity-100 cursor-pointer"}
                 onMouseEnter={() => setSelect(data[i]!.name)}
