@@ -109,3 +109,24 @@ class ActivityData(Resource):
 
 
 api.add_resource(ActivityData, '/activitydata/<string:username>/<string:category>')
+
+
+class EntryData(Resource):
+    @login_required
+    def get(self, username):
+        pass
+
+    @login_required
+    def post(self, username):
+        pass
+
+    @login_required
+    def delete(self, username):
+        pass
+
+    @login_required
+    def patch(self, username):
+        pass
+
+
+api.add_resource(EntryData, '/entrydata/<string:username>')

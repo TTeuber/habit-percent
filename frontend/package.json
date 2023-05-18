@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@heroicons/react": "^2.0.18",
     "@tanstack/react-query": "^4.28.0",
     "@tremor/react": "^2.1.0",
     "@trpc/client": "^10.18.0",
@@ -16,9 +17,11 @@
     "@trpc/react-query": "^10.18.0",
     "@trpc/server": "^10.18.0",
     "cuid": "^3.0.0",
+    "moment": "^2.29.4",
     "next": "^13.2.4",
     "node-fetch": "^3.3.1",
     "react": "18.2.0",
+    "react-datepicker": "^4.11.0",
     "react-dom": "18.2.0",
     "superjson": "1.12.2",
     "uuid": "^9.0.0",
@@ -29,6 +32,7 @@
     "@types/node": "^18.15.5",
     "@types/prettier": "^2.7.2",
     "@types/react": "^18.0.28",
+    "@types/react-datepicker": "^4.11.2",
     "@types/react-dom": "^18.0.11",
     "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.56.0",

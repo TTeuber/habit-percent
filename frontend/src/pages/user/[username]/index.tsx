@@ -32,7 +32,7 @@ export default function UserPage() {
 
   const [showModal, setShowModal] = useState(false);
 
-  const [showEntries, setShowEntries] = useState(false);
+  const [showEntries, setShowEntries] = useState(true);
   return (
     <div>
       <p className={"h-6"}>{select}</p>

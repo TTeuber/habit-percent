@@ -11,7 +11,7 @@ export default function LoginPage() {
     fetch("/backend/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: "tyler", password: "1234" }),
+      body: JSON.stringify({ username, password }),
     })
       .then((res) => {
         console.log(res.status);

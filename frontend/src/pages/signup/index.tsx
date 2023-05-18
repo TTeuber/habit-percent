@@ -11,7 +11,7 @@ export default function SignupPage() {
     fetch("/backend/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: username, password: password }),
+      body: JSON.stringify({ username, password }),
     })
       .then((res) => {
         console.log(res.status);
@@ -40,7 +40,7 @@ export default function SignupPage() {
           name="confirm_password"
           placeholder="Confirm Password"
         />
-        <button type={"submit"}>Log In</button>
+        <button type={"submit"}>Sign Up</button>
       </form>
     </>
   );
