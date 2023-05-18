@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import type { EntryData } from "~/redux/entrySlice";
 import { CategoryData } from "~/pages/user/[username]";
 import { ActivityData } from "~/pages/user/[username]/[category]";
 import moment from "moment";
@@ -10,6 +12,8 @@ import {
   ArrowRightIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/solid";
+import { RootState } from "~/redux/store";
+import { setEntries } from "~/redux/entrySlice";
 
 export default function Entries({
   setShowEntries,
@@ -17,6 +21,8 @@ export default function Entries({
   setShowEntries: (showEntries: boolean) => void;
 }) {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const entryStore = useSelector((state: RootState) => state.entries);
 
   const [date, setDate] = useState<Date>(moment().toDate());
 
@@ -30,19 +36,9 @@ export default function Entries({
     }
   }, [router.isReady]);
 
-  type EntryData = {
-    date: Date;
-    data: {
-      category: string;
-      activities: {
-        name: string;
-        completed: boolean;
-      }[];
-    }[];
-  };
-
   const entryData = useRef<EntryData[]>([
     {
+      id: "1",
       date: moment("2023-05-18").toDate(),
       data: [
         {
@@ -69,6 +65,7 @@ export default function Entries({
       ],
     },
     {
+      id: "2",
       date: moment("2023-05-16").toDate(),
       data: [
         {
@@ -95,6 +92,7 @@ export default function Entries({
       ],
     },
     {
+      id: "3",
       date: moment("2023-05-17").toDate(),
       data: [
         {
@@ -121,6 +119,18 @@ export default function Entries({
       ],
     },
   ]);
+
+  useEffect(() => {
+    if (router.isReady) {
+      // fetch(`/backend/entrydata/${router.query.username}`)
+      //   .then((res) => res.json())
+      //   .then((data) => {
+      //     dispatch(setEntries(data));
+      //   });
+
+      dispatch(setEntries(entryData.current));
+    }
+  }, [router.isReady]);
 
   return (
     <div
@@ -175,7 +185,7 @@ export default function Entries({
           </div>
         </div>
         <div className={"grow overflow-scroll bg-gray-700 pt-3"}>
-          {entryData.current.find(
+          {entryStore.find(
             (entry) => entry.date.toDateString() === date.toDateString()
           )?.data &&
             entryData.current
