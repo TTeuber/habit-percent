@@ -12,9 +12,10 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/solid";
 import { RootState } from "~/redux/store";
-import { setEntries } from "~/redux/entrySlice";
+import { addEntry, setEntries, updateEntry } from "~/redux/entrySlice";
 import { setDate, updateDate } from "~/redux/dateSlice";
 import { setUserData } from "~/redux/userSlice";
+import { v4 as uuid } from "uuid";
 
 import testData from "../../public/entryTestData.json";
 import entriesData from "../../public/entriesData.json";
@@ -39,7 +40,10 @@ export default function Entries({
   const dateSelector = useSelector((state: RootState) => state.date);
 
   const [utilityData, setUtilityData] = useState<
-    { category: string; activities: { name: string }[] }[]
+    {
+      category: string;
+      activities: { name: string; id: string; userId: string }[];
+    }[]
   >([]);
 
   useEffect(() => {
@@ -60,13 +64,11 @@ export default function Entries({
 
   useEffect(() => {
     if (router.isReady) {
-      // fetch(`/backend/entrydata/${router.query.username}`)
-      //   .then((res) => res.json())
-      //   .then((data) => {
-      //     dispatch(setEntries(data));
-      //   });
-
-      dispatch(setEntries(testData));
+      fetch(`/backend/entrydata/${router.query.username}`)
+        .then((res) => res.json())
+        .then((data) => {
+          dispatch(setEntries(data.data));
+        });
     }
   }, [router.isReady]);
 
@@ -136,6 +138,18 @@ export default function Entries({
         <button
           className={"p-4"}
           onClick={() => {
+            // todo: submit data
+            fetch(`/backend/entrydata/${router.query.username}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ data: entrySelector }),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                console.log(data);
+              });
             setShowEntries(false);
           }}
         >
@@ -146,14 +160,20 @@ export default function Entries({
   );
 }
 
-function Category({ name, activities }: { name: string; activities: any[] }) {
+function Category({
+  name,
+  activities,
+}: {
+  name: string;
+  activities: { name: string; id: string; userId: string }[];
+}) {
   const [showActivities, setShowActivities] = useState(false);
 
   const dateSelector = useSelector((state: RootState) => state.date);
+  const entrySelector = useSelector((state: RootState) => state.entries);
 
   return (
     <div className={"category"}>
-      <p>{moment(dateSelector).format("YYYY-MM-DD")}</p>
       <div
         className={"flex cursor-pointer transition-all"}
         onClick={() => setShowActivities(!showActivities)}
@@ -179,8 +199,9 @@ function Category({ name, activities }: { name: string; activities: any[] }) {
                 key={i}
                 name={entry.name}
                 id={entry.id}
+                userId={entry.userId}
                 completed={
-                  entriesData.find((e) => {
+                  entrySelector.find((e) => {
                     return (
                       e.activityId === entry.id &&
                       e.date === moment(dateSelector).format("YYYY-MM-DD")
@@ -200,19 +221,22 @@ function Entry({
   name,
   id,
   completed,
+  userId,
 }: {
   name: string;
   id: string;
+  userId: string;
   completed: boolean;
 }) {
   const dateSelector = useSelector((state: RootState) => state.date);
+  const entrySelector = useSelector((state: RootState) => state.entries);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // set input checked when date changes
   useEffect(() => {
     if (inputRef.current !== null) {
       inputRef.current.checked =
-        entriesData.find((e) => {
+        entrySelector.find((e) => {
           return (
             e.activityId === id &&
             e.date === moment(dateSelector).format("YYYY-MM-DD")
@@ -221,13 +245,38 @@ function Entry({
     }
   }, [dateSelector]);
 
+  const dispatch = useDispatch();
+
   return (
     <div className={"relative flex items-center gap-2 px-2"}>
       <input
         type="checkbox"
         ref={inputRef}
         onClick={() => {
-          // todo: update entriesData
+          // find entry in entriesData
+          const entry = entrySelector.find((e) => {
+            return (
+              e.activityId === id &&
+              e.date === moment(dateSelector).format("YYYY-MM-DD")
+            );
+          });
+          // update entry
+          if (entry) {
+            dispatch(
+              updateEntry({ ...entry, completed: inputRef.current!.checked })
+            );
+          } else {
+            // add new entry if it doesn't exist
+            dispatch(
+              addEntry({
+                id: uuid(),
+                userId: userId,
+                activityId: id,
+                date: moment(dateSelector).format("YYYY-MM-DD"),
+                completed: inputRef.current!.checked,
+              })
+            );
+          }
         }}
         className={
           "mr-4 h-0 w-0 cursor-pointer appearance-none after:absolute after:top-1/2 after:left-2 after:block after:h-4 after:w-4 after:-translate-y-1/2 after:border after:bg-red-50 after:content-[''] checked:after:bg-blue-50"

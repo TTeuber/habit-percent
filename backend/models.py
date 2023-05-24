@@ -63,9 +63,9 @@ class Entries(db.Model):
     date = db.Column(db.Date)
     completed = db.Column(db.Boolean)
 
-    def __init__(self, _user, _activity, _date, _completed, _id=uuid.uuid4()):
+    def __init__(self, _user, _activity_id, _date, _completed, _id=uuid.uuid4()):
         self.id = _id
         self.user_id = _user.id
-        self.activity_id = _activity.id
+        self.activity_id = _activity_id
         self.date = _date
         self.completed = _completed
