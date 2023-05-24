@@ -2,8 +2,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { EntryData } from "~/redux/entrySlice";
-import { CategoryData } from "~/pages/user/[username]";
-import { ActivityData } from "~/pages/user/[username]/[category]";
+import type { UserData } from "~/redux/userSlice";
 import moment from "moment";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -14,6 +13,19 @@ import {
 } from "@heroicons/react/24/solid";
 import { RootState } from "~/redux/store";
 import { setEntries } from "~/redux/entrySlice";
+import { setDate, updateDate } from "~/redux/dateSlice";
+import { setUserData } from "~/redux/userSlice";
+
+import testData from "../../public/entryTestData.json";
+import entriesData from "../../public/entriesData.json";
+
+type Entries = {
+  id: string;
+  date: string;
+  activityId: string;
+  userId: string;
+  completed: boolean;
+};
 
 export default function Entries({
   setShowEntries,
@@ -22,9 +34,13 @@ export default function Entries({
 }) {
   const router = useRouter();
   const dispatch = useDispatch();
-  const entryStore = useSelector((state: RootState) => state.entries);
+  const entrySelector = useSelector((state: RootState) => state.entries);
+  const userSelector = useSelector((state: RootState) => state.user);
+  const dateSelector = useSelector((state: RootState) => state.date);
 
-  const [date, setDate] = useState<Date>(moment().toDate());
+  const [utilityData, setUtilityData] = useState<
+    { category: string; activities: { name: string }[] }[]
+  >([]);
 
   useEffect(() => {
     if (router.isReady) {
@@ -33,92 +49,14 @@ export default function Entries({
         .then((data) => {
           console.log(data);
         });
+
+      fetch(`/backend/entryutility/${router.query.username}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setUtilityData(data.data);
+        });
     }
   }, [router.isReady]);
-
-  const entryData = useRef<EntryData[]>([
-    {
-      id: "1",
-      date: moment("2023-05-18").toDate(),
-      data: [
-        {
-          category: "a",
-          activities: [
-            { name: "a", completed: true },
-            { name: "b", completed: true },
-          ],
-        },
-        {
-          category: "b",
-          activities: [
-            { name: "a", completed: true },
-            { name: "b", completed: true },
-          ],
-        },
-        {
-          category: "c",
-          activities: [
-            { name: "a", completed: true },
-            { name: "b", completed: true },
-          ],
-        },
-      ],
-    },
-    {
-      id: "2",
-      date: moment("2023-05-16").toDate(),
-      data: [
-        {
-          category: "a",
-          activities: [
-            { name: "a", completed: true },
-            { name: "b", completed: false },
-          ],
-        },
-        {
-          category: "b",
-          activities: [
-            { name: "a", completed: true },
-            { name: "b", completed: false },
-          ],
-        },
-        {
-          category: "c",
-          activities: [
-            { name: "a", completed: true },
-            { name: "b", completed: false },
-          ],
-        },
-      ],
-    },
-    {
-      id: "3",
-      date: moment("2023-05-17").toDate(),
-      data: [
-        {
-          category: "a",
-          activities: [
-            { name: "a", completed: false },
-            { name: "b", completed: false },
-          ],
-        },
-        {
-          category: "b",
-          activities: [
-            { name: "a", completed: false },
-            { name: "b", completed: false },
-          ],
-        },
-        {
-          category: "c",
-          activities: [
-            { name: "a", completed: false },
-            { name: "b", completed: false },
-          ],
-        },
-      ],
-    },
-  ]);
 
   useEffect(() => {
     if (router.isReady) {
@@ -128,7 +66,7 @@ export default function Entries({
       //     dispatch(setEntries(data));
       //   });
 
-      dispatch(setEntries(entryData.current));
+      dispatch(setEntries(testData));
     }
   }, [router.isReady]);
 
@@ -161,17 +99,17 @@ export default function Entries({
             <ArrowLeftIcon
               className={"h-6 w-6 cursor-pointer"}
               onClick={() => {
-                setDate(moment(date).subtract(1, "day").toDate());
+                dispatch(updateDate(-1));
               }}
             />
             <div className={"h-10"}>
               <DatePicker
-                selected={date}
+                selected={dateSelector}
                 dateFormat={"eee, MMMM do, yyyy"}
                 className={"text-center"}
                 onChange={(i) => {
                   if (i) {
-                    setDate(i);
+                    dispatch(setDate(i));
                   }
                 }}
               />
@@ -179,28 +117,21 @@ export default function Entries({
             <ArrowRightIcon
               className={"h-6 w-6 cursor-pointer"}
               onClick={() => {
-                setDate(moment(date).add(1, "day").toDate());
+                dispatch(updateDate(1));
               }}
             />
           </div>
         </div>
         <div className={"grow overflow-scroll bg-gray-700 pt-3"}>
-          {entryStore.find(
-            (entry) => entry.date.toDateString() === date.toDateString()
-          )?.data &&
-            entryData.current
-              .find(
-                (entry) => entry.date.toDateString() === date.toDateString()
-              )!
-              .data.map((entry, i) => {
-                return (
-                  <Category
-                    key={i}
-                    name={entry.category}
-                    activities={entry.activities}
-                  />
-                );
-              })}
+          {utilityData.map((entry, i) => {
+            return (
+              <Category
+                key={i}
+                name={entry.category}
+                activities={entry.activities}
+              />
+            );
+          })}
         </div>
         <button
           className={"p-4"}
@@ -217,9 +148,12 @@ export default function Entries({
 
 function Category({ name, activities }: { name: string; activities: any[] }) {
   const [showActivities, setShowActivities] = useState(false);
-  const [num] = useState(activities.length as number);
+
+  const dateSelector = useSelector((state: RootState) => state.date);
+
   return (
     <div className={"category"}>
+      <p>{moment(dateSelector).format("YYYY-MM-DD")}</p>
       <div
         className={"flex cursor-pointer transition-all"}
         onClick={() => setShowActivities(!showActivities)}
@@ -233,21 +167,28 @@ function Category({ name, activities }: { name: string; activities: any[] }) {
         </div>
         <p>{name}</p>
       </div>
-      {/*<Entry />*/}
-      <div className={``}>
+      <div>
         <div
           className={`flex ${
             showActivities ? `max-h-[500px]` : "max-h-0"
           } flex-col overflow-hidden transition-all duration-500`}
         >
-          {activities.map((activity, i) => {
+          {activities.map((entry, i) => {
             return (
               <Entry
                 key={i}
-                name={activity.name}
-                completed={activity.completed}
+                name={entry.name}
+                id={entry.id}
+                completed={
+                  entriesData.find((e) => {
+                    return (
+                      e.activityId === entry.id &&
+                      e.date === moment(dateSelector).format("YYYY-MM-DD")
+                    );
+                  })?.completed ?? false
+                }
               />
-            ); // TODO: pass in activity data, activity id as key
+            );
           })}
         </div>
       </div>
@@ -255,18 +196,44 @@ function Category({ name, activities }: { name: string; activities: any[] }) {
   );
 }
 
-function Entry({ name, completed }: { name: string; completed: boolean }) {
+function Entry({
+  name,
+  id,
+  completed,
+}: {
+  name: string;
+  id: string;
+  completed: boolean;
+}) {
+  const dateSelector = useSelector((state: RootState) => state.date);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // set input checked when date changes
+  useEffect(() => {
+    if (inputRef.current !== null) {
+      inputRef.current.checked =
+        entriesData.find((e) => {
+          return (
+            e.activityId === id &&
+            e.date === moment(dateSelector).format("YYYY-MM-DD")
+          );
+        })?.completed ?? false;
+    }
+  }, [dateSelector]);
+
   return (
     <div className={"relative flex items-center gap-2 px-2"}>
       <input
         type="checkbox"
-        checked={completed}
+        ref={inputRef}
+        onClick={() => {
+          // todo: update entriesData
+        }}
         className={
           "mr-4 h-0 w-0 cursor-pointer appearance-none after:absolute after:top-1/2 after:left-2 after:block after:h-4 after:w-4 after:-translate-y-1/2 after:border after:bg-red-50 after:content-[''] checked:after:bg-blue-50"
         }
       />
       <p className={"border"}>{name}</p>
-      {/*<p>{moment().format("YYYY-MM-DD")}</p>*/}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 
 export type EntryData = {
   id: string;
-  date: Date;
+  date: string;
   data: {
     category: string;
     activities: {
@@ -13,21 +13,25 @@ export type EntryData = {
   }[];
 };
 
-interface EntryState {
-  data: EntryData[];
-}
-
-const initialState: EntryState = { data: [] };
+type Entries = {
+  id: string;
+  date: string;
+  activityId: string;
+  userId: string;
+  completed: boolean;
+};
 
 const slice = createSlice({
   name: "entry",
-  initialState: initialState.data,
+  initialState: [] as EntryData[],
   reducers: {
     setEntries: (state, action: PayloadAction<EntryData[]>) => action.payload,
+
     addEntry: (state, action: PayloadAction<EntryData>) => [
       ...state,
       action.payload,
     ],
+
     updateEntry: (state, action: PayloadAction<EntryData>) => {
       const index = state.findIndex(
         (entry) => entry.date === action.payload.date

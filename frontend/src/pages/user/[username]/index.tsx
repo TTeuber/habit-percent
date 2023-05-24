@@ -1,6 +1,9 @@
 "use client";
 import { useRouter } from "next/router";
 import { useEffect, createContext, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setUserData } from "~/redux/userSlice";
+import { RootState } from "~/redux/store";
 import Graph from "~/components/Graph";
 import List from "~/components/List";
 import EditModal from "~/components/EditModal";
@@ -20,11 +23,15 @@ export default function UserPage() {
   const username = router.query.username as string;
   const [data, setData] = useState<CategoryData>([]);
 
+  const dispatch = useDispatch();
+  const userStore = useSelector((state: RootState) => state.user);
+
   useEffect(() => {
     fetch("/backend/data/" + username)
       .then((res) => res.json())
       .then((data) => {
         setData(data.data);
+        dispatch(setUserData(data.data));
       });
   }, []);
 

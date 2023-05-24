@@ -1,7 +1,7 @@
 from flask_restful import Resource, Api
 from models import Categories, db, Activities, Entries
 from flask_login import login_required, current_user
-from flask import request
+from flask import request, jsonify
 
 api = Api()
 
@@ -114,7 +114,10 @@ api.add_resource(ActivityData, '/activitydata/<string:username>/<string:category
 class EntryData(Resource):
     @login_required
     def get(self, username):
-        pass
+        user = Entries.query.filter_by(user_id=current_user.id).all()
+        data = [{"id": str(user.id), "date": str(user.date), "userId": str(user.user_id),
+                 "activityId": str(user.activity_id), "completed": user.completed}]
+        return jsonify(data), 200
 
     @login_required
     def post(self, username):
@@ -130,3 +133,17 @@ class EntryData(Resource):
 
 
 api.add_resource(EntryData, '/entrydata/<string:username>')
+
+
+class EntryUtility(Resource):
+    @login_required
+    def get(self, username):
+        categories = Categories.query.filter_by(user_id=current_user.id).all()
+        activities = Activities.query.filter_by(user_id=current_user.id).all()
+        data = [{"category": category.name,
+                 "activities": [{"name": activity.name, "id": str(activity.id)} for activity in activities if
+                                activity.category_id == category.id]} for category in categories]
+        return {"data": data}, 200
+
+
+api.add_resource(EntryUtility, '/entryutility/<string:username>')
