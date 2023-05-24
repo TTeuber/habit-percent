@@ -28,6 +28,7 @@ class Categories(db.Model):
     actualPercentage = db.Column(db.Float)
 
     activities = db.relationship('Activities', backref='categories', lazy='dynamic')
+    entries = db.relationship('Entries', backref='categories', lazy='dynamic')
 
     def __init__(self, _user, _name, _target, _actual=0, _id=uuid.uuid4()):
         self.id = _id
@@ -59,13 +60,15 @@ class Activities(db.Model):
 class Entries(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     activity_id = db.Column(UUID(), db.ForeignKey('activities.id'), index=True)
+    category_id = db.Column(UUID(), db.ForeignKey('categories.id'), index=True)
     user_id = db.Column(UUID(), db.ForeignKey('user.id'), index=True)
     date = db.Column(db.Date)
     completed = db.Column(db.Boolean)
 
-    def __init__(self, _user, _activity_id, _date, _completed, _id=uuid.uuid4()):
+    def __init__(self, _user, _activity_id, _category_id, _date, _completed, _id=uuid.uuid4()):
         self.id = _id
         self.user_id = _user.id
         self.activity_id = _activity_id
+        self.category_id = _category_id
         self.date = _date
         self.completed = _completed

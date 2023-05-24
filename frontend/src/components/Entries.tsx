@@ -24,6 +24,7 @@ type Entries = {
   id: string;
   date: string;
   activityId: string;
+  categoryId: string;
   userId: string;
   completed: boolean;
 };
@@ -42,7 +43,12 @@ export default function Entries({
   const [utilityData, setUtilityData] = useState<
     {
       category: string;
-      activities: { name: string; id: string; userId: string }[];
+      activities: {
+        name: string;
+        id: string;
+        userId: string;
+        categoryId: string;
+      }[];
     }[]
   >([]);
 
@@ -165,7 +171,12 @@ function Category({
   activities,
 }: {
   name: string;
-  activities: { name: string; id: string; userId: string }[];
+  activities: {
+    name: string;
+    id: string;
+    userId: string;
+    categoryId: string;
+  }[];
 }) {
   const [showActivities, setShowActivities] = useState(false);
 
@@ -200,6 +211,7 @@ function Category({
                 name={entry.name}
                 id={entry.id}
                 userId={entry.userId}
+                categoryId={entry.categoryId}
                 completed={
                   entrySelector.find((e) => {
                     return (
@@ -222,10 +234,12 @@ function Entry({
   id,
   completed,
   userId,
+  categoryId,
 }: {
   name: string;
   id: string;
   userId: string;
+  categoryId: string;
   completed: boolean;
 }) {
   const dateSelector = useSelector((state: RootState) => state.date);
@@ -272,6 +286,7 @@ function Entry({
                 id: uuid(),
                 userId: userId,
                 activityId: id,
+                categoryId: categoryId,
                 date: moment(dateSelector).format("YYYY-MM-DD"),
                 completed: inputRef.current!.checked,
               })

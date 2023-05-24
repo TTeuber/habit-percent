@@ -9,6 +9,8 @@ export type EntryData = {
     activities: {
       name: string;
       completed: boolean;
+      categoryId: string;
+      userId: string;
     }[];
   }[];
 };
@@ -17,6 +19,7 @@ type Entry = {
   id: string;
   date: string;
   activityId: string;
+  categoryId: string;
   userId: string;
   completed: boolean;
 };

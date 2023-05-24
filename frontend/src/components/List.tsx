@@ -43,7 +43,7 @@ export default function List({
           >
             <h2>{d.name}</h2>
             <p>
-              {d.value * 100}%/{d.target * 100}%
+              {Math.round(d.value * 100)}%/{d.target * 100}%
             </p>
           </div>
         );
